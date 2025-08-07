@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Quiz Review - Week 3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+        }
+        .gradient-text {
+            background-image: linear-gradient(to right, #6ee7b7, #60a5fa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .explanation-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, padding-top 0.5s ease-in-out, margin-top 0.5s ease-in-out;
+            padding-top: 0;
+            margin-top: 0;
+        }
+        .question-card.open .explanation-content {
+            max-height: 500px; /* Adjust as needed */
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+        .question-card.open .toggle-icon {
+            transform: rotate(180deg);
+        }
+        .toggle-icon {
+            transition: transform 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-gray-200">
+
+    <!-- Header -->
+    <header class="text-center py-10 md:py-12 px-4">
+        <h1 class="text-3xl md:text-5xl font-bold gradient-text tracking-tight">LLMs Week 3 Quiz Review</h1>
+        <p class="mt-3 text-lg text-gray-400 max-w-2xl mx-auto">Answers are shown below. Click a card to reveal the explanation.</p>
+        <!-- New Controls -->
+        <div class="mt-6 flex justify-center gap-4">
+            <button id="reveal-all-btn" class="px-5 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="fas fa-eye mr-2"></i>Reveal All Explanations
+            </button>
+            <button id="hide-all-btn" class="px-5 py-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors">
+                <i class="fas fa-eye-slash mr-2"></i>Hide All
+            </button>
+        </div>
+    </header>
+
+    <!-- Questions Container -->
+    <main id="quiz-container" class="container mx-auto px-4 pb-16">
+        <!-- Questions will be dynamically inserted here -->
+    </main>
+
+    <script>
+        const quizData = [
+            {
+                question: "In backpropagation, which method is used to compute the gradients?",
+                options: ["Gradient descent", "Chain rule of derivatives", "Matrix factorization", "Linear regression"],
+                correctAnswer: "Chain rule of derivatives",
+                explanation: "Think of a neural network as a long chain of nested functions. The chain rule is the mathematical tool that allows us to efficiently compute the gradient of the final loss with respect to each weight, working backwards through the layers. Gradient descent is the algorithm that *uses* these gradients to update the weights."
+            },
+            {
+                question: "Which of the following functions is not differentiable at zero?",
+                options: ["Sigmoid", "Tanh", "ReLU", "Linear"],
+                correctAnswer: "ReLU",
+                explanation: "The ReLU function, f(x) = max(0, x), has a sharp 'kink' at x=0. The slope abruptly changes from 0 (for negative numbers) to 1 (for positive numbers). Because there isn't a single, unique tangent at this point, the function is not differentiable at zero."
+            },
+            {
+                question: "In the context of regularization, which of the following statements is true?",
+                options: ["L2 regularization tends to produce sparse weights", "Dropout is applied during inference to improve accuracy", "L1 regularization adds the squared weight penalties to the loss function", "Dropout prevents overfitting by randomly disabling neurons during training"],
+                correctAnswer: "Dropout prevents overfitting by randomly disabling neurons during training",
+                explanation: "Dropout is a technique where a random fraction of neurons are ignored during each training step. This prevents the network from relying too heavily on any single neuron and forces it to learn more robust, generalizable features. It is only applied during training."
+            },
+            {
+                question: "Which activation function is least likely to suffer from vanishing gradients?",
+                options: ["Tanh", "Sigmoid", "ReLU"],
+                correctAnswer: "ReLU",
+                explanation: "The vanishing gradient problem occurs when gradients become extremely small in deep networks. For positive inputs, the derivative of ReLU is a constant 1. This means the gradient can flow backwards through many layers without shrinking, making it much less prone to vanishing compared to Sigmoid or Tanh, whose derivatives are always less than 1."
+            },
+            {
+                question: "Which of the following equations correctly represents the derivative of the sigmoid function?",
+                options: ["σ(x)⋅(1+σ(x))", "σ(x)²", "σ(x)⋅(1−σ(x))", "1/(1+e^x)"],
+                correctAnswer: "σ(x)⋅(1−σ(x))",
+                explanation: "A key property of the sigmoid function, σ(x), is that its derivative can be expressed neatly in terms of itself. This made it computationally efficient for backpropagation, as the function's output could be reused to calculate its gradient."
+            },
+            {
+                question: "What condition must be met for the Perceptron learning algorithm to converge?",
+                options: ["Learning rate must be zero", "Data must be non-linearly separable", "Data must be linearly separable", "Activation function must be sigmoid"],
+                correctAnswer: "Data must be linearly separable",
+                explanation: "A Perceptron creates a single straight line (or hyperplane) to separate data. The Perceptron Convergence Theorem guarantees that the algorithm will find a solution *if and only if* one exists. If the data cannot be perfectly separated by one line, the algorithm will never converge."
+            },
+            {
+                question: "Which of the following logic functions requires a network with at least one hidden layer to model?",
+                options: ["AND", "OR", "NOT", "XOR"],
+                correctAnswer: "XOR",
+                explanation: "The XOR (exclusive OR) problem is a classic example of a non-linearly separable function. You cannot draw a single straight line to separate the 'true' outputs from the 'false' outputs. A network needs a hidden layer to create a more complex, non-linear decision boundary to solve it."
+            },
+            {
+                question: "Why is it necessary to include non-linear activation functions between layers in an MLP?",
+                options: ["Without them, the network is just a linear function", "They prevent overfitting", "They allow backpropagation to work"],
+                correctAnswer: "Without them, the network is just a linear function",
+                explanation: "A stack of linear functions is mathematically equivalent to a single linear function. Non-linear activation functions are the crucial ingredient that 'bends' and 'twists' the data between layers, allowing the network to learn and represent complex, non-linear patterns."
+            },
+            {
+                question: "What is typically the output activation function for an MLP solving a binary classification task?",
+                options: ["Tanh", "ReLU", "Sigmoid", "Softmax"],
+                correctAnswer: "Sigmoid",
+                explanation: "For binary classification (e.g., yes/no, cat/not-cat), the goal is to output a probability between 0 and 1. The Sigmoid function is perfect for this as it squishes any input value into the (0, 1) range. Softmax is used for multi-class classification."
+            },
+            {
+                question: "Which type of regularization encourages sparsity in the weights?",
+                options: ["L1 regularization", "L2 regularization", "Dropout", "Early stopping"],
+                correctAnswer: "L1 regularization",
+                explanation: "Sparsity means many weights become exactly zero. L1 regularization adds a penalty proportional to the *absolute value* of the weights. This has the effect of driving the weights of less important features all the way to zero, effectively performing feature selection. L2 uses the *squared* weights, which keeps them small but rarely exactly zero."
+            }
+        ];
+
+        const quizContainer = document.getElementById('quiz-container');
+
+        // Function to create and append cards
+        function renderQuiz() {
+            quizData.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'question-card bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6 mb-4';
+                card.dataset.index = index;
+
+                const optionsHTML = item.options.map(option => `
+                    <li class="py-1 px-3 rounded-md ${option === item.correctAnswer ? 'text-green-400 font-semibold' : 'text-gray-400'}">
+                        ${option === item.correctAnswer ? '<i class="fas fa-check-circle mr-2 text-green-500"></i>' : '<i class="far fa-circle mr-2 text-gray-600"></i>'}
+                        ${option}
+                    </li>
+                `).join('');
+
+                card.innerHTML = `
+                    <p class="text-lg font-semibold text-white">Question ${index + 1}</p>
+                    <p class="mt-1 text-gray-300 mb-4">${item.question}</p>
+                    
+                    <!-- Always visible answers -->
+                    <div class="options-container">
+                         <ul class="list-none mt-2 mb-4 border-t border-b border-gray-700 py-2">
+                            ${optionsHTML}
+                        </ul>
+                    </div>
+
+                    <!-- Toggle button for explanation -->
+                    <button class="toggle-explanation-btn w-full text-left text-blue-400 hover:text-blue-300 font-semibold">
+                        <span class="mr-2">Show Explanation</span>
+                        <i class="fas fa-chevron-down toggle-icon inline-block"></i>
+                    </button>
+
+                    <!-- Collapsible explanation -->
+                    <div class="explanation-content">
+                        <p class="mt-2 text-gray-400 border-t border-gray-700 pt-4">${item.explanation}</p>
+                    </div>
+                `;
+                quizContainer.appendChild(card);
+            });
+        }
+
+        // --- Event Listeners ---
+
+        // For individual card clicks
+        quizContainer.addEventListener('click', function(e) {
+            const button = e.target.closest('.toggle-explanation-btn');
+            if (button) {
+                const card = button.closest('.question-card');
+                card.classList.toggle('open');
+                const buttonText = button.querySelector('span');
+                buttonText.textContent = card.classList.contains('open') ? 'Hide Explanation' : 'Show Explanation';
+            }
+        });
+
+        // For "Reveal All" button
+        document.getElementById('reveal-all-btn').addEventListener('click', () => {
+            document.querySelectorAll('.question-card').forEach(card => {
+                card.classList.add('open');
+                const buttonText = card.querySelector('.toggle-explanation-btn span');
+                if (buttonText) buttonText.textContent = 'Hide Explanation';
+            });
+        });
+
+        // For "Hide All" button
+        document.getElementById('hide-all-btn').addEventListener('click', () => {
+            document.querySelectorAll('.question-card').forEach(card => {
+                card.classList.remove('open');
+                const buttonText = card.querySelector('.toggle-explanation-btn span');
+                if (buttonText) buttonText.textContent = 'Show Explanation';
+            });
+        });
+        
+        // Initial render of the quiz
+        renderQuiz();
+
+    </script>
+
+</body>
+</html>
