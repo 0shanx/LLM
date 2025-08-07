@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Quiz Review - Week 3</title>
+    <title>LLM Assignments</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,6 +11,7 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #111827; /* bg-gray-900 */
+            color: #d1d5db; /* text-gray-300 */
         }
         .gradient-text {
             background-image: linear-gradient(to right, #6ee7b7, #60a5fa);
@@ -18,15 +19,23 @@
             background-clip: text;
             color: transparent;
         }
+        /* Page container styles */
+        .page {
+            display: none; /* Hide all pages by default */
+        }
+        .page.active {
+            display: block; /* Show only the active page */
+        }
+        /* Styles for Assignment Page */
         .explanation-content {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.5s ease-in-out, padding-top 0.5s ease-in-out, margin-top 0.5s ease-in-out;
+            transition: max-height 0.7s ease-in-out, padding-top 0.5s ease-in-out, margin-top 0.5s ease-in-out;
             padding-top: 0;
             margin-top: 0;
         }
         .question-card.open .explanation-content {
-            max-height: 500px; /* Adjust as needed */
+            max-height: 800px; /* Increased for more detailed content */
             padding-top: 1rem;
             margin-top: 1rem;
         }
@@ -36,171 +45,265 @@
         .toggle-icon {
             transition: transform 0.3s ease-in-out;
         }
+        /* Nav button active style */
+        .nav-button.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        /* Dropdown styles */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #1f2937;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 51; /* Ensure it's above other content */
+            border-radius: 0.5rem;
+            padding: 0.5rem 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .dropdown-content a:hover { background-color: #374151; }
+        .dropdown:hover .dropdown-content { display: block; }
+        
+        /* Home page week card style */
+        .week-card {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .week-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1), 0 4px 6px -2px rgba(59, 130, 246, 0.05);
+        }
+        .week-card.disabled {
+            background-color: #374151;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .week-card.disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
     </style>
 </head>
-<body class="text-gray-200">
+<body>
 
-    <!-- Header -->
-    <header class="text-center py-10 md:py-12 px-4">
-        <h1 class="text-3xl md:text-5xl font-bold gradient-text tracking-tight">LLMs Week 3 Quiz Review</h1>
-        <p class="mt-3 text-lg text-gray-400 max-w-2xl mx-auto">Answers are shown below. Click a card to reveal the explanation.</p>
-        <!-- New Controls -->
-        <div class="mt-6 flex justify-center gap-4">
-            <button id="reveal-all-btn" class="px-5 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
-                <i class="fas fa-eye mr-2"></i>Reveal All Explanations
-            </button>
-            <button id="hide-all-btn" class="px-5 py-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors">
-                <i class="fas fa-eye-slash mr-2"></i>Hide All
-            </button>
+    <!-- Navigation Bar -->
+    <nav class="bg-gray-800/80 backdrop-blur-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-center h-16">
+                <div class="flex space-x-2 md:space-x-4">
+                    <button data-page="home" class="nav-button px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Home</button>
+                    <div class="dropdown">
+                        <button class="nav-button px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white" data-page="assignments">Assignments <i class="fas fa-chevron-down ml-1 text-xs"></i></button>
+                        <div id="quiz-dropdown" class="dropdown-content">
+                            <!-- Dropdown links will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </header>
+    </nav>
 
-    <!-- Questions Container -->
-    <main id="quiz-container" class="container mx-auto px-4 pb-16">
-        <!-- Questions will be dynamically inserted here -->
-    </main>
+    <!-- Page 0: Home -->
+    <div id="page-home" class="page">
+        <header class="text-center py-12 md:py-16">
+            <h1 class="text-4xl md:text-6xl font-bold gradient-text">LLM Course Companion</h1>
+            <p class="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">Your central hub for weekly assignments.</p>
+        </header>
+        <main class="container mx-auto px-4 pb-16">
+            <h2 class="text-2xl font-bold text-center text-white mb-8">Select a Week to Begin</h2>
+            <div id="home-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+                <!-- Week cards will be inserted here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Page 1: Assignments -->
+    <div id="page-assignments" class="page">
+        <header class="text-center py-10 md:py-12 px-4">
+            <h1 id="quiz-title" class="text-3xl md:text-5xl font-bold gradient-text tracking-tight"></h1>
+            <p class="mt-3 text-lg text-gray-400 max-w-2xl mx-auto">Answers are shown below. Click a card to reveal the explanation.</p>
+        </header>
+        <main id="quiz-container" class="container mx-auto px-4 pb-16">
+            <!-- Quiz content will be inserted here -->
+        </main>
+    </div>
 
     <script>
-        const quizData = [
-            {
-                question: "In backpropagation, which method is used to compute the gradients?",
-                options: ["Gradient descent", "Chain rule of derivatives", "Matrix factorization", "Linear regression"],
-                correctAnswer: "Chain rule of derivatives",
-                explanation: "Think of a neural network as a long chain of nested functions. The chain rule is the mathematical tool that allows us to efficiently compute the gradient of the final loss with respect to each weight, working backwards through the layers. Gradient descent is the algorithm that *uses* these gradients to update the weights."
-            },
-            {
-                question: "Which of the following functions is not differentiable at zero?",
-                options: ["Sigmoid", "Tanh", "ReLU", "Linear"],
-                correctAnswer: "ReLU",
-                explanation: "The ReLU function, f(x) = max(0, x), has a sharp 'kink' at x=0. The slope abruptly changes from 0 (for negative numbers) to 1 (for positive numbers). Because there isn't a single, unique tangent at this point, the function is not differentiable at zero."
-            },
-            {
-                question: "In the context of regularization, which of the following statements is true?",
-                options: ["L2 regularization tends to produce sparse weights", "Dropout is applied during inference to improve accuracy", "L1 regularization adds the squared weight penalties to the loss function", "Dropout prevents overfitting by randomly disabling neurons during training"],
-                correctAnswer: "Dropout prevents overfitting by randomly disabling neurons during training",
-                explanation: "Dropout is a technique where a random fraction of neurons are ignored during each training step. This prevents the network from relying too heavily on any single neuron and forces it to learn more robust, generalizable features. It is only applied during training."
-            },
-            {
-                question: "Which activation function is least likely to suffer from vanishing gradients?",
-                options: ["Tanh", "Sigmoid", "ReLU"],
-                correctAnswer: "ReLU",
-                explanation: "The vanishing gradient problem occurs when gradients become extremely small in deep networks. For positive inputs, the derivative of ReLU is a constant 1. This means the gradient can flow backwards through many layers without shrinking, making it much less prone to vanishing compared to Sigmoid or Tanh, whose derivatives are always less than 1."
-            },
-            {
-                question: "Which of the following equations correctly represents the derivative of the sigmoid function?",
-                options: ["σ(x)⋅(1+σ(x))", "σ(x)²", "σ(x)⋅(1−σ(x))", "1/(1+e^x)"],
-                correctAnswer: "σ(x)⋅(1−σ(x))",
-                explanation: "A key property of the sigmoid function, σ(x), is that its derivative can be expressed neatly in terms of itself. This made it computationally efficient for backpropagation, as the function's output could be reused to calculate its gradient."
-            },
-            {
-                question: "What condition must be met for the Perceptron learning algorithm to converge?",
-                options: ["Learning rate must be zero", "Data must be non-linearly separable", "Data must be linearly separable", "Activation function must be sigmoid"],
-                correctAnswer: "Data must be linearly separable",
-                explanation: "A Perceptron creates a single straight line (or hyperplane) to separate data. The Perceptron Convergence Theorem guarantees that the algorithm will find a solution *if and only if* one exists. If the data cannot be perfectly separated by one line, the algorithm will never converge."
-            },
-            {
-                question: "Which of the following logic functions requires a network with at least one hidden layer to model?",
-                options: ["AND", "OR", "NOT", "XOR"],
-                correctAnswer: "XOR",
-                explanation: "The XOR (exclusive OR) problem is a classic example of a non-linearly separable function. You cannot draw a single straight line to separate the 'true' outputs from the 'false' outputs. A network needs a hidden layer to create a more complex, non-linear decision boundary to solve it."
-            },
-            {
-                question: "Why is it necessary to include non-linear activation functions between layers in an MLP?",
-                options: ["Without them, the network is just a linear function", "They prevent overfitting", "They allow backpropagation to work"],
-                correctAnswer: "Without them, the network is just a linear function",
-                explanation: "A stack of linear functions is mathematically equivalent to a single linear function. Non-linear activation functions are the crucial ingredient that 'bends' and 'twists' the data between layers, allowing the network to learn and represent complex, non-linear patterns."
-            },
-            {
-                question: "What is typically the output activation function for an MLP solving a binary classification task?",
-                options: ["Tanh", "ReLU", "Sigmoid", "Softmax"],
-                correctAnswer: "Sigmoid",
-                explanation: "For binary classification (e.g., yes/no, cat/not-cat), the goal is to output a probability between 0 and 1. The Sigmoid function is perfect for this as it squishes any input value into the (0, 1) range. Softmax is used for multi-class classification."
-            },
-            {
-                question: "Which type of regularization encourages sparsity in the weights?",
-                options: ["L1 regularization", "L2 regularization", "Dropout", "Early stopping"],
-                correctAnswer: "L1 regularization",
-                explanation: "Sparsity means many weights become exactly zero. L1 regularization adds a penalty proportional to the *absolute value* of the weights. This has the effect of driving the weights of less important features all the way to zero, effectively performing feature selection. L2 uses the *squared* weights, which keeps them small but rarely exactly zero."
-            }
-        ];
-
+        // --- DATA FOR ALL PAGES ---
+        const allQuizData = {
+            week1: [
+                { question: "Which of the following best demonstrates the principle of distributional semantics?", options: ["Words that co-occur frequently tend to share semantic properties.", "Each word has a unique, fixed meaning regardless of context.", "Syntax determines the entire meaning of a sentence.", "Distributional semantics is unrelated to word embeddings."], correctAnswer: "Words that co-occur frequently tend to share semantic properties.", explanation: "<b>Correct Answer:</b> This statement is the essence of the <b>Distributional Hypothesis</b>, famously summarized by linguist J.R. Firth as 'You shall know a word by the company it keeps.' It posits that words appearing in similar linguistic contexts (i.e., surrounded by similar words) tend to have similar meanings. This is the foundational principle for modern word embeddings like Word2Vec and GloVe.<br><br><b>Incorrect Options:</b><br>• <i>'Each word has a unique, fixed meaning...'</i> is incorrect because it ignores context, which is central to distributional semantics.<br>• <i>'Syntax determines the entire meaning...'</i> is incorrect. Syntax (grammatical structure) contributes to meaning, but semantics (the meaning of words) is also crucial. Distributional semantics focuses on the latter.<br>• <i>'Distributional semantics is unrelated to word embeddings.'</i> is incorrect. Word embeddings are a direct computational application of distributional semantics, representing word meanings as vectors in a high-dimensional space based on their context." },
+                { question: "Which of the following words is least likely to be polysemous?", options: ["Bank", "Tree", "Gravity", "Idea"], correctAnswer: "Gravity", explanation: "<b>Correct Answer:</b> 'Gravity' is the least polysemous because its meaning is overwhelmingly dominated by its scientific definition—the physical force of attraction between masses. While it can be used metaphorically (e.g., 'the gravity of the situation'), this is a figurative extension, not a distinct core meaning.<br><br><b>Incorrect Options (Examples of Polysemy):</b><br>• <b>Bank:</b> Can mean a financial institution or the side of a river.<br>• <b>Tree:</b> Can mean a woody perennial plant or a hierarchical data structure in computer science.<br>• <b>Idea:</b> Can mean a concept, a plan, a belief, or an opinion. These are all distinct, though related, meanings." },
+                { question: "Consider the following sentence pair: Sentence 1: Riya dropped the glass. Sentence 2: The glass broke. Does Sentence 1 entail Sentence 2?", options: ["Yes", "No"], correctAnswer: "No", explanation: "<b>Correct Answer:</b> There is no strict logical entailment. Entailment requires that the truth of the first statement *guarantees* the truth of the second. While our world knowledge makes it highly probable that a dropped glass will break, it is not a logical certainty. The glass could be made of durable plastic, or it could land on a soft rug. Since there are possible scenarios where Sentence 1 is true but Sentence 2 is false, Sentence 1 does not entail Sentence 2.<br><br><b>Incorrect Option:</b><br>• Choosing 'Yes' confuses high probability with logical necessity. Entailment is about what *must* be true, not what is *likely* to be true." },
+                { question: "Which sentence contains a homonym?", options: ["He wound the clock before bed.", "She tied her hair in a bun.", "I can't bear the noise.", "He likes to bat after lunch."], correctAnswer: "He likes to bat after lunch.", explanation: "<b>Correct Answer:</b> The word 'bat' is a homonym because it has two distinct, unrelated meanings with the same spelling and pronunciation: a piece of sporting equipment used in baseball or cricket, and a nocturnal flying mammal.<br><br><b>Incorrect Options:</b><br>• <i>'wound'</i>: This is a homograph (same spelling, different pronunciation/meaning) - 'wound' (past tense of wind) vs. 'wound' (an injury).<br>• <i>'bear'</i>: This is also a homonym ('to endure' vs. the animal), but the chosen correct answer is a clearer example often used in linguistics.<br>• <i>'bun'</i>: While it can mean a bread roll or a hairstyle, these meanings are arguably related through shape, making it more of a case of polysemy than a classic homonym." },
+                { question: "Which of the following relationships are incorrectly labeled?", options: ["Car is a meronym of wheel.", "Rose is a hyponym of flower.", "Keyboard is a holonym of key.", "Tree is a hypernym of oak."], correctAnswer: "Car is a meronym of wheel.", explanation: "<b>Correct Answer:</b> This label is incorrect because the relationship is reversed. A <b>meronym</b> is a part of a whole. Therefore, a 'wheel' is a meronym of a 'car'. A <b>holonym</b> is the whole to which parts belong, so a 'car' is a holonym of a 'wheel'.<br><br><b>Incorrect Options (Correctly Labeled):</b><br>• A <b>hyponym</b> is a word of more specific meaning than a general term. 'Rose' is a specific type of 'flower'.<br>• A <b>holonym</b> is a whole to which parts belong. A 'keyboard' is the whole that contains a 'key'.<br>• A <b>hypernym</b> is a word of more general meaning. 'Tree' is a general category that includes 'oak'." },
+                { question: "___ studies how context influences the interpretation of meaning.", options: ["Syntax", "Morphology", "Pragmatics", "Semantics"], correctAnswer: "Pragmatics", explanation: "<b>Correct Answer:</b> Pragmatics is the study of how context contributes to meaning. It goes beyond the literal meaning of words to understand the intended meaning, implications, and social functions of an utterance.<br><br><b>Incorrect Options:</b><br>• <b>Syntax:</b> The study of sentence structure and grammar rules.<br>• <b>Morphology:</b> The study of word formation and the internal structure of words (e.g., prefixes, suffixes).<br>• <b>Semantics:</b> The study of the literal meaning of words and sentences, independent of context." },
+                { question: "In the sentence, \"After Sita praised Radha, she smiled happily,\" who does \"she\" most likely refer to?", options: ["Sita", "Radha", "Ambiguous", "Neither"], correctAnswer: "Ambiguous", explanation: "<b>Correct Answer:</b> This is a classic example of anaphora resolution ambiguity. The pronoun 'she' could logically refer to either 'Sita' (the person performing the action of praising) or 'Radha' (the person receiving the praise). Without additional context, there is no grammatical rule to definitively resolve the reference, making it ambiguous.<br><br><b>Incorrect Options:</b><br>• While human intuition might favor one interpretation, both 'Sita' and 'Radha' are grammatically valid antecedents for the pronoun 'she'." },
+                { question: "Which of the following statements is true? (i) Word embeddings capture semantic similarity through context. (ii) Morphological analysis is irrelevant in LLMs. (iii) Hypernyms are more specific than hyponyms.", options: ["Only (i)", "Only (i) and (iii)", "Only (ii) and (iii)", "All of the above"], correctAnswer: "Only (i)", explanation: "<b>Correct Answer:</b> Statement (i) is true; it's the basis of distributional semantics. <br><br><b>Incorrect Options:</b><br>• Statement (ii) is false. Morphology (word structure) is very important for LLMs to handle rare words, typos, and new words by breaking them down into subword units (e.g., using techniques like Byte-Pair Encoding).<br>• Statement (iii) is false. Hypernyms are more general (e.g., 'vehicle' is a hypernym of 'car'), while hyponyms are more specific." },
+                { question: "What issues can be observed in the following text? On a much-needed #workcation in beautiful Goa. Workin & chillin by d waves!", options: ["Idioms", "Non-standard English", "Tricky Entity Names", "Neologisms"], correctAnswer: ["Non-standard English", "Neologisms"], explanation: "<b>Correct Answers:</b><br>• <b>Non-standard English:</b> The text uses informal spellings and slang like 'Workin', 'chillin', and 'd' instead of 'the'.<br>• <b>Neologisms:</b> A neologism is a newly coined word or expression. '#workcation' is a modern blend of 'work' and 'vacation' that has entered the lexicon recently.<br><br><b>Incorrect Option:</b><br>• <b>Idioms:</b> An idiom is a phrase with a figurative meaning different from its literal meaning (e.g., 'kick the bucket'). This text does not contain any idioms." },
+                { question: "In semantic role labelling, we determine the semantic role of each argument with respect to the ___ of the sentence.", options: ["noun phrase", "subject", "predicate", "adjunct"], correctAnswer: "predicate", explanation: "<b>Correct Answer:</b> The predicate (typically the main verb) is the central element in Semantic Role Labeling (SRL). It describes the action or state, and all other semantic roles (like Agent, Patient, Instrument) are defined by their relationship to this predicate. SRL answers 'Who did what to whom?' where the 'what' is the predicate.<br><br><b>Incorrect Options:</b><br>• The 'subject' and 'noun phrase' are often the arguments that *receive* a semantic role, they are not the point of reference. An 'adjunct' is an optional part of a sentence (like a prepositional phrase) that often describes the circumstances of the predicate." }
+            ],
+            week2: [
+                { question: "Which of the following does not directly affect perplexity?", options: ["Vocabulary size", "Sentence probability", "Number of tokens", "Sentence length"], correctAnswer: "Vocabulary size", explanation: "<b>Correct Answer:</b> Perplexity is a measure of how well a probability model predicts a sample. The formula is `PP(W) = P(w_1, w_2, ..., w_N)^(-1/N)`. The direct inputs to this formula are the overall sentence probability and the number of tokens (N), which is the sentence length. Vocabulary size is an external factor that makes the modeling task harder (affecting the resulting sentence probability), but it is not an explicit variable in the perplexity calculation itself.<br><br><b>Incorrect Options:</b><br>• 'Sentence probability' and 'Number of tokens' / 'Sentence length' are the core components of the perplexity formula." },
+                { question: "Which equation expresses the chain rule for a 4-word sentence?", options: ["P(w1,w2,w3,w4)=P(w1)+P(w2|w1)+P(w3|w2)+P(w4|w3)", "P(w1,w2,w3,w4)=P(w1)×P(w2|w1)×P(w3|w1,w2)×P(w4|w1,w2,w3)", "P(w1,w2,w3,w4)=P(w1)×P(w2|w1)×P(w3|w2)×P(w4|w3)", "P(w1,w2,w3,w4)=P(w4|w3)*P(w3|w2)*P(w2|w1)×P(w1)"], correctAnswer: "P(w1,w2,w3,w4)=P(w1)×P(w2|w1)×P(w3|w1,w2)×P(w4|w1,w2,w3)", explanation: "<b>Correct Answer:</b> This is the exact definition of the chain rule of probability applied to a sequence. It states that the joint probability of the entire sequence is the product of the conditional probabilities of each word, where each word is conditioned on *all* the words that came before it.<br><br><b>Incorrect Options:</b><br>• The first option incorrectly uses addition instead of multiplication. Probabilities in a joint distribution are multiplied.<br>• The third and fourth options incorrectly apply the Markov assumption (assuming a word only depends on one preceding word), which is a simplification of the chain rule, not the rule itself." },
+                { question: "Which assumption allows n-gram models to reduce computation?", options: ["Bayes Assumption", "Chain Rule", "Independence Assumption", "Markov Assumption"], correctAnswer: "Markov Assumption", explanation: "<b>Correct Answer:</b> The Markov Assumption is the key simplification that makes n-gram models feasible. It assumes that the probability of a word depends only on a limited window of `n-1` preceding words, rather than the entire history of the sentence. This drastically reduces the number of probabilities we need to calculate and store.<br><br><b>Incorrect Options:</b><br>• The 'Chain Rule' is the principle that the Markov assumption simplifies.<br>• The 'Independence Assumption' is an extreme form of the Markov assumption where n=1 (a unigram model), assuming each word is independent of all others.<br>• 'Bayes Assumption' is not a standard term; Bayes' Rule is a different theorem for inverting conditional probabilities." },
+                { question: "In a trigram language model, which of the following is a correct example of linear interpolation?", options: ["P(wi|wi-2,wi-1)=λ1P(wi|wi-2,wi-1)", "P(wi|wi-2,wi-1)=λ1P(wi|wi-2,wi-1)+λ2P(wi|wi-1)+λ3P(wi)", "P(wi|wi-2,wi-1)=max(P(wi|wi-2,wi-1),P(wi|wi-1))", "P(wi/wi-2,wi-1)=P(wi)P(wi-1)/P(wi-2)"], correctAnswer: "P(wi|wi-2,wi-1)=λ1P(wi|wi-2,wi-1)+λ2P(wi|wi-1)+λ3P(wi)", explanation: "<b>Correct Answer:</b> Linear interpolation is a smoothing technique that combats the problem of zero-probability n-grams by creating a weighted average of probabilities from different n-gram orders. This formula correctly shows the final trigram probability as a combination of the trigram, bigram, and unigram probabilities, each scaled by a weight (lambda) that sums to 1.<br><br><b>Incorrect Options:</b><br>• The first option is just the trigram probability itself. The third option describes backoff, not interpolation. The fourth option is not a standard language modeling formula." },
+                { question: "A trigram model is equivalent to which order Markov model?", options: ["3", "2", "1", "4"], correctAnswer: "2", explanation: "<b>Correct Answer:</b> An n-gram model is equivalent to an (n-1)-order Markov model. A trigram model (n=3) predicts a word based on the two preceding words. This dependence on the last two states makes it a 2nd-order Markov model.<br><br><b>Incorrect Options:</b><br>• A 3rd-order Markov model would be a 4-gram model. A 1st-order Markov model would be a bigram model." },
+                { question: "Which smoothing technique leverages the number of unique contexts a word appears in?", options: ["Good-Turing", "Add-k", "Kneser-Ney", "Absolute Discounting"], correctAnswer: "Kneser-Ney", explanation: "<b>Correct Answer:</b> Kneser-Ney smoothing is powerful because it's based on the diversity of a word's usage. It asks: 'How many different types of words does this word follow?'. A word that follows many different word types (like 'the') is considered more likely to appear in a new, unseen context than a word that only ever follows one specific word (like 'York' following 'New').<br><br><b>Incorrect Options:</b><br>• 'Add-k' is a simple method that adds a small constant to all counts.<br>• 'Absolute Discounting' subtracts a fixed discount from non-zero counts.<br>• 'Good-Turing' estimates the probability of unseen events based on the frequency of events seen only once." },
+                { question: "Assuming a bi-gram language model, calculate the probability of the sentence: <s> birds fly in the blue sky </s>", options: ["2/37", "1/27", "0", "1/36"], correctAnswer: "0", explanation: "<b>Correct Answer:</b> The probability of a sentence in a bigram model is the product of its bigram probabilities: P(birds|<s>) * P(fly|birds) * P(in|fly) * P(the|in) * P(blue|the) * P(sky|blue) * P(</s>|sky). To calculate P(sky|blue), we need the count of the bigram 'blue sky' divided by the count of the unigram 'blue'. Looking at the corpus, the bigram 'blue sky' never appears. Therefore, its count is 0, making the probability P(sky|blue) = 0. Since one term in the product is 0, the entire sentence probability becomes 0.<br><br><b>Incorrect Options:</b><br>• The other values represent non-zero probabilities, which would only be possible if every bigram in the test sentence also existed in the training corpus." },
+                { question: "Assuming a bi-gram language model, calculate the perplexity of the sentence: <s> birds fly in the blue sky </s>", options: ["27^(1/4)", "27^(1/5)", "9^(1/6)", "None of these"], correctAnswer: "None of these", explanation: "<b>Correct Answer:</b> Perplexity is calculated as the Nth root of the inverse of the sentence probability. From the previous question, we determined that the probability of this sentence is 0 because it contains an unseen bigram ('blue sky'). The inverse of 0 (1/0) is undefined, or infinite. This means the model is infinitely 'perplexed' by a sentence it believes is impossible. Therefore, no finite value can be the correct answer.<br><br><b>Incorrect Options:</b><br>• All other options represent finite values, which are incorrect for a zero-probability event." }
+            ],
+            week3: [
+                { question: "In backpropagation, which method is used to compute the gradients?", options: ["Gradient descent", "Chain rule of derivatives", "Matrix factorization", "Linear regression"], correctAnswer: "Chain rule of derivatives", explanation: "<b>Correct Answer:</b> Backpropagation is the algorithm that efficiently computes gradients in a neural network, and it does so by applying the <b>chain rule</b> from calculus. Because a network is a deeply nested function, the chain rule allows us to calculate the derivative of the loss with respect to any weight by recursively working backward from the final layer.<br><br><b>Incorrect Options:</b><br>• <b>Gradient descent</b> is the optimization algorithm that *uses* the gradients (computed by backpropagation) to update the network's weights.<br>• <b>Matrix factorization</b> and <b>Linear regression</b> are other machine learning techniques, unrelated to the mechanism of backpropagation." },
+                { question: "Which of the following functions is not differentiable at zero?", options: ["Sigmoid", "Tanh", "ReLU", "Linear"], correctAnswer: "ReLU", explanation: "<b>Correct Answer:</b> The ReLU (Rectified Linear Unit) function, defined as f(x) = max(0, x), has a sharp corner or 'kink' at x=0. The function's slope abruptly changes from 0 to 1 at this point. A function is only differentiable at a point if it has a single, well-defined tangent, which ReLU lacks at x=0.<br><br><b>Incorrect Options:</b><br>• <b>Sigmoid</b>, <b>Tanh</b>, and <b>Linear</b> functions are all smooth and continuous everywhere, meaning they are differentiable at all points, including zero." },
+                { question: "In the context of regularization, which of the following statements is true?", options: ["L2 regularization tends to produce sparse weights", "Dropout is applied during inference to improve accuracy", "L1 regularization adds the squared weight penalties to the loss function", "Dropout prevents overfitting by randomly disabling neurons during training"], correctAnswer: "Dropout prevents overfitting by randomly disabling neurons during training", explanation: "<b>Correct Answer:</b> Dropout is a regularization technique where, during each training iteration, a random subset of neurons is temporarily 'dropped' or ignored. This prevents the network from becoming overly reliant on specific neurons and forces it to learn more robust, distributed representations, thus reducing overfitting.<br><br><b>Incorrect Options:</b><br>• <i>'L2 regularization tends to produce sparse weights'</i> is false; <b>L1</b> regularization produces sparse weights (many weights become exactly zero). L2 encourages small, non-zero weights.<br>• <i>'Dropout is applied during inference'</i> is false; it is only applied during <b>training</b>. At inference time, the full network is used.<br>• <i>'L1 regularization adds the squared weight penalties...'</i> is false; L1 adds the <b>absolute value</b> of the weights as a penalty. L2 adds the squared penalties." },
+                { question: "Which activation function is least likely to suffer from vanishing gradients?", options: ["Tanh", "Sigmoid", "ReLU"], correctAnswer: "ReLU", explanation: "<b>Correct Answer:</b> The vanishing gradient problem occurs when gradients become exponentially small as they are backpropagated through deep networks. ReLU combats this because its derivative is a constant 1 for any positive input. This allows the gradient to pass through many layers without diminishing in magnitude.<br><br><b>Incorrect Options:</b><br>• <b>Sigmoid</b> and <b>Tanh</b> both have derivatives that are always less than 1. When these small derivatives are multiplied together through many layers, the final gradient can become vanishingly small, halting learning in the early layers." },
+                { question: "Which of the following equations correctly represents the derivative of the sigmoid function?", options: ["σ(x)⋅(1+σ(x))", "σ(x)²", "σ(x)⋅(1−σ(x))", "1/(1+e^x)"], correctAnswer: "σ(x)⋅(1−σ(x))", explanation: "<b>Correct Answer:</b> This is a key mathematical property of the sigmoid function, σ(x). Its derivative can be expressed using the function's own output value. This was a significant advantage for computational efficiency in backpropagation, as the value σ(x) computed during the forward pass could be directly reused to calculate the gradient in the backward pass.<br><br><b>Incorrect Options:</b><br>• The other equations are mathematically incorrect representations of the sigmoid's derivative. The last option, `1/(1+e^x)`, is the definition of the sigmoid function itself, not its derivative." },
+                { question: "What condition must be met for the Perceptron learning algorithm to converge?", options: ["Learning rate must be zero", "Data must be non-linearly separable", "Data must be linearly separable", "Activation function must be sigmoid"], correctAnswer: "Data must be linearly separable", explanation: "<b>Correct Answer:</b> The Perceptron Convergence Theorem, a foundational result in machine learning, proves that the Perceptron learning algorithm will find a solution (a separating hyperplane) in a finite number of steps *if and only if* the training data is linearly separable. This means a single straight line (in 2D) or plane can perfectly divide the data points into their respective classes.<br><br><b>Incorrect Options:</b><br>• If the data is 'non-linearly separable', the algorithm will never converge. • The 'learning rate' must be positive, not zero. • The classic Perceptron uses a step function, not a sigmoid activation." },
+                { question: "Which of the following logic functions requires a network with at least one hidden layer to model?", options: ["AND", "OR", "NOT", "XOR"], correctAnswer: "XOR", explanation: "<b>Correct Answer:</b> The XOR (exclusive OR) function is the canonical example of a non-linearly separable problem. Its four data points cannot be separated by a single straight line. A single-layer network (like a Perceptron) can only learn linear boundaries. To solve XOR, a multi-layer perceptron (MLP) with at least one hidden layer is required to create a more complex, non-linear decision boundary.<br><br><b>Incorrect Options:</b><br>• 'AND', 'OR', and 'NOT' are all linearly separable functions and can be modeled by a single-layer network." },
+                { question: "Why is it necessary to include non-linear activation functions between layers in an MLP?", options: ["Without them, the network is just a linear function", "They prevent overfitting", "They allow backpropagation to work"], correctAnswer: "Without them, the network is just a linear function", explanation: "<b>Correct Answer:</b> A sequence of linear transformations is mathematically equivalent to a single, combined linear transformation. If a deep network used only linear activations, the entire stack of layers would behave no differently than a single linear layer, regardless of its depth. Non-linear activation functions are the crucial element that introduces complexity, allowing the network to 'bend' and 'warp' the data space to learn and approximate any arbitrary non-linear function.<br><br><b>Incorrect Options:</b><br>• While some non-linearities can help with training stability, their primary purpose is not to prevent overfitting (that's the job of regularization) or to enable backpropagation (which works with linear functions too)." },
+                { question: "What is typically the output activation function for an MLP solving a binary classification task?", options: ["Tanh", "ReLU", "Sigmoid", "Softmax"], correctAnswer: "Sigmoid", explanation: "<b>Correct Answer:</b> In a binary classification task, the goal is to output a single value representing a probability (e.g., the probability that an image contains a cat). The Sigmoid function is perfectly suited for this because it maps any real-valued input to the range (0, 1), which is the standard definition of a probability.<br><br><b>Incorrect Options:</b><br>• <b>Softmax</b> is used for multi-class classification, where it produces a probability distribution over multiple classes.<br>• <b>ReLU</b> and <b>Tanh</b> are typically used in the hidden layers of a network, not the final output layer for classification." },
+                { question: "Which type of regularization encourages sparsity in the weights?", options: ["L1 regularization", "L2 regularization", "Dropout", "Early stopping"], correctAnswer: "L1 regularization", explanation: "<b>Correct Answer:</b> L1 regularization adds a penalty to the loss function that is proportional to the *absolute value* of the weights (the L1 norm). This has the effect of pushing the weights of less important features to become exactly zero, creating a 'sparse' model. This can be useful for feature selection.<br><br><b>Incorrect Options:</b><br>• <b>L2 regularization</b> adds a penalty proportional to the *squared value* of the weights. It encourages all weights to be small but rarely pushes them to be exactly zero.<br>• <b>Dropout</b> and <b>Early stopping</b> are other regularization techniques, but they do not directly encourage weight sparsity." }
+            ]
+        };
+        
+        // --- PAGE NAVIGATION & RENDER LOGIC ---
+        const navButtons = document.querySelectorAll('.nav-button');
+        const pages = document.querySelectorAll('.page');
+        const quizDropdown = document.getElementById('quiz-dropdown');
         const quizContainer = document.getElementById('quiz-container');
+        const quizTitle = document.getElementById('quiz-title');
+        const homeGrid = document.getElementById('home-grid');
 
-        // Function to create and append cards
-        function renderQuiz() {
-            quizData.forEach((item, index) => {
+        function showPage(pageId) {
+            pages.forEach(page => page.classList.toggle('active', page.id === `page-${pageId}`));
+            navButtons.forEach(button => {
+                const buttonPage = button.dataset.page;
+                let isActive = (buttonPage === pageId);
+                // Special case for assignments page
+                if (pageId === 'assignments' && button.parentElement.classList.contains('dropdown')) {
+                    isActive = true;
+                }
+                button.classList.toggle('active', isActive);
+            });
+        }
+
+        function renderAssignments(weekKey) {
+            quizContainer.innerHTML = ''; // Clear previous content
+            const weekData = allQuizData[weekKey];
+            quizTitle.textContent = `Week ${weekKey.replace('week', '')} Assignment`;
+            
+            if (!weekData) {
+                quizContainer.innerHTML = `<p class="text-center text-gray-400 text-xl mt-10">Assignment for this week has not been released yet.</p>`;
+                showPage('assignments');
+                return;
+            }
+
+            weekData.forEach((item, index) => {
                 const card = document.createElement('div');
                 card.className = 'question-card bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6 mb-4';
-                card.dataset.index = index;
-
-                const optionsHTML = item.options.map(option => `
-                    <li class="py-1 px-3 rounded-md ${option === item.correctAnswer ? 'text-green-400 font-semibold' : 'text-gray-400'}">
-                        ${option === item.correctAnswer ? '<i class="fas fa-check-circle mr-2 text-green-500"></i>' : '<i class="far fa-circle mr-2 text-gray-600"></i>'}
-                        ${option}
-                    </li>
-                `).join('');
+                
+                const correctAnswers = Array.isArray(item.correctAnswer) ? item.correctAnswer : [item.correctAnswer];
 
                 card.innerHTML = `
                     <p class="text-lg font-semibold text-white">Question ${index + 1}</p>
                     <p class="mt-1 text-gray-300 mb-4">${item.question}</p>
-                    
-                    <!-- Always visible answers -->
                     <div class="options-container">
                          <ul class="list-none mt-2 mb-4 border-t border-b border-gray-700 py-2">
-                            ${optionsHTML}
+                            ${item.options.map(option => `
+                                <li class="py-1 px-3 rounded-md ${correctAnswers.includes(option) ? 'text-green-400 font-semibold' : 'text-gray-400'}">
+                                    ${correctAnswers.includes(option) ? '<i class="fas fa-check-circle mr-2 text-green-500"></i>' : '<i class="far fa-circle mr-2 text-gray-600"></i>'}
+                                    ${option}
+                                </li>`).join('')}
                         </ul>
                     </div>
-
-                    <!-- Toggle button for explanation -->
                     <button class="toggle-explanation-btn w-full text-left text-blue-400 hover:text-blue-300 font-semibold">
-                        <span class="mr-2">Show Explanation</span>
-                        <i class="fas fa-chevron-down toggle-icon inline-block"></i>
+                        <span class="mr-2">Show Explanation</span><i class="fas fa-chevron-down toggle-icon inline-block"></i>
                     </button>
-
-                    <!-- Collapsible explanation -->
                     <div class="explanation-content">
                         <p class="mt-2 text-gray-400 border-t border-gray-700 pt-4">${item.explanation}</p>
-                    </div>
-                `;
+                    </div>`;
                 quizContainer.appendChild(card);
             });
+            showPage('assignments');
+        }
+        
+        function renderHome() {
+            homeGrid.innerHTML = '';
+            for (let i = 1; i <= 12; i++) {
+                const weekKey = `week${i}`;
+                const isReleased = !!allQuizData[weekKey];
+                const card = document.createElement('div');
+                card.className = `week-card rounded-lg p-6 text-center ${isReleased ? 'cursor-pointer' : 'disabled'}`;
+                if (isReleased) {
+                    card.dataset.week = weekKey;
+                }
+
+                card.innerHTML = `
+                    <i class="fas ${isReleased ? 'fa-book-open text-blue-400' : 'fa-lock text-gray-500'} text-4xl mb-4"></i>
+                    <h3 class="text-xl font-bold text-white">Week ${i}</h3>
+                    <p class="text-sm text-gray-400">${isReleased ? 'Assignment' : 'Assignment not released'}</p>
+                `;
+                homeGrid.appendChild(card);
+            }
         }
 
-        // --- Event Listeners ---
-
-        // For individual card clicks
-        quizContainer.addEventListener('click', function(e) {
-            const button = e.target.closest('.toggle-explanation-btn');
-            if (button) {
-                const card = button.closest('.question-card');
-                card.classList.toggle('open');
-                const buttonText = button.querySelector('span');
-                buttonText.textContent = card.classList.contains('open') ? 'Hide Explanation' : 'Show Explanation';
+        // --- SETUP & EVENT LISTENERS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Populate dropdown
+            for (let i = 1; i <= 12; i++) {
+                const link = document.createElement('a');
+                link.href = "#";
+                link.dataset.week = `week${i}`;
+                link.textContent = `Week ${i}`;
+                link.className = "quiz-week-link block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700";
+                quizDropdown.appendChild(link);
             }
-        });
 
-        // For "Reveal All" button
-        document.getElementById('reveal-all-btn').addEventListener('click', () => {
-            document.querySelectorAll('.question-card').forEach(card => {
-                card.classList.add('open');
-                const buttonText = card.querySelector('.toggle-explanation-btn span');
-                if (buttonText) buttonText.textContent = 'Hide Explanation';
+            // Nav button listeners
+            navButtons.forEach(button => {
+                if (!button.parentElement.classList.contains('dropdown')) {
+                    button.addEventListener('click', () => showPage(button.dataset.page));
+                }
             });
-        });
-
-        // For "Hide All" button
-        document.getElementById('hide-all-btn').addEventListener('click', () => {
-            document.querySelectorAll('.question-card').forEach(card => {
-                card.classList.remove('open');
-                const buttonText = card.querySelector('.toggle-explanation-btn span');
-                if (buttonText) buttonText.textContent = 'Show Explanation';
+            
+            // Dropdown link listeners
+            quizDropdown.addEventListener('click', e => {
+                e.preventDefault();
+                if (e.target.matches('.quiz-week-link')) {
+                    renderAssignments(e.target.dataset.week);
+                }
             });
-        });
-        
-        // Initial render of the quiz
-        renderQuiz();
+            
+            // Home grid listener
+            homeGrid.addEventListener('click', e => {
+                const card = e.target.closest('.week-card');
+                if (card && card.dataset.week) {
+                    renderAssignments(card.dataset.week);
+                }
+            });
 
+            // Assignment page listeners
+            quizContainer.addEventListener('click', e => {
+                const button = e.target.closest('.toggle-explanation-btn');
+                if (button) {
+                    const card = button.closest('.question-card');
+                    card.classList.toggle('open');
+                    button.querySelector('span').textContent = card.classList.contains('open') ? 'Hide Explanation' : 'Show Explanation';
+                }
+            });
+
+            // Initial render
+            renderHome();
+            showPage('home'); // Show the home page by default
+        });
     </script>
-
 </body>
 </html>
